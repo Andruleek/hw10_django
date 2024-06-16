@@ -1,0 +1,3 @@
+cd hw_project
+
+py .\manage.py runserver
