@@ -6,3 +6,4 @@ urlpatterns = [
     path('', include("quotes.urls")),
     #path('users/', include("users.urls")),
 ]
+
