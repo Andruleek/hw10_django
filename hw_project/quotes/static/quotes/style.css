@@ -286,3 +286,7 @@ html {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+
+.good{
+    float:right;
+}
