@@ -1,15 +1,58 @@
-<!-- myapp/templates/register.html -->
-<h1>Register</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Quotes to Scrape</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static "quotes/style.css" %}">
+</head>
+<body>
+    <div class="container">
+        <div class="row header-box">
+            <div class="col-md-8">
+                <h1>
+                    <a href="/" style="text-decoration: none">Quotes to Scrape</a>
+                </h1>
+            </div>
+            <div class="col-md-4">
+                <p>
+                
+                    <a href="/login/">Login</a>
+                
+                </p>
+            </div>
+        </div>
+    
+<body>
+    <form action="/login/" method="post" accept-charset="utf-8" >
+        <input type="hidden" name="csrf_token" value="zlRuoFmYGOqAVNetWvQcdIHLfxkrKEhysJDPZSbpjnTaUwCBigXM"/>
+        <div class="row">
+            <div class="form-group col-xs-3">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-xs-3">
+                <label for="username">Password</label>
+                <input type="password" class="form-control" id="password" name="password" />
+            </div>
+        </div>
+        <input type="submit" value="Login" class="btn btn-primary" />
+        
+    </form>
+</body>
 
-<!-- myapp/templates/login.html -->
-<h1>Login</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-</form>
+    </div>
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted">
+                Quotes by: <a href="https://www.goodreads.com/quotes">GoodReads.com</a>
+            </p>
+            <p class="copyright">
+                Made with <span class='zyte'>❤</span> by <a class='zyte' href="https://www.zyte.com">Zyte</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
