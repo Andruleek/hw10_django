@@ -6,4 +6,3 @@ urlpatterns = [
     path('', include("quotes.urls")),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
-
