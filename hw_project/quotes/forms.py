@@ -1,75 +1,45 @@
-from django import forms
-from .models import User
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
+
+from django.forms import ModelForm, CharField, TextInput, DateField, DateInput, ModelChoiceField, ModelMultipleChoiceField, SelectMultiple, Select, Textarea, ChoiceField
+
+from .models import Tag, Author, Quote
 
 
-class Meta:
-    model = User
-    fields = ('username', 'email', 'password', 'confirm_password')
+class AuthorForm(ModelForm):
+    fullname = CharField(max_length=100, required=True, widget=TextInput(attrs={"class": "form-control"}))
+    born_date = CharField(max_length=50, required=True, widget=TextInput(attrs={"class": "form-control"}))
+    born_location = CharField(max_length=100, required=True, widget=TextInput(attrs={"class": "form-control"}))
+    description = CharField(required=True, widget=Textarea(attrs={"class": "form-control"}))
 
-class Login(forms.Form):
-    username = forms.CharField()
-    password = forms.CharField(widget=forms.PasswordInput)
-
-class UserRegisterForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ('username', 'password')
-        
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
-
-
-class RegisterForm(UserCreationForm):
-    username = forms.CharField(max_length=100,
-                               required=True,
-                               widget=forms.TextInput())
-
-    email = forms.CharField(max_length=100,
-                               required=True,
-                               widget=forms.TextInput())
-
-    password1 = forms.CharField(max_length=50,
-                                required=True,
-                                widget=forms.PasswordInput())
-
-    password2 = forms.CharField(max_length=50,
-                                required=True,
-                                widget=forms.PasswordInput())
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-
-
-class Login(AuthenticationForm):
-
-    class Meta:
-        model = User
-        fields = ['username', 'password']
-
-
-from django import forms
-from .models import Quote, Tag
-
-from django import forms
-from .models import Author
-
-class AuthorForm(forms.ModelForm):
     class Meta:
         model = Author
-        fields = ('name',)
+        fields = ['fullname', 'born_date', 'born_location', 'description']
 
 
-class QuoteForm(forms.ModelForm):
-    class Meta:
-        model = Quote
-        fields = ('quote', 'author', 'tags')
+class TagForm(ModelForm):
+    name = CharField(min_length=3, max_length=50, required=True, widget=TextInput(attrs={"class": "form-control"}))
 
-class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
-        fields = ('name', )
+        fields = ['name']
+
+
+class QuoteForm(ModelForm):
+    quote = CharField(required=True, widget=TextInput(attrs={"class": "form-control"}))
+    tags = ModelMultipleChoiceField(queryset=Tag.objects.all().order_by('name'), widget=SelectMultiple(attrs={"class": "form-select", "size": "7"}))
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['author'] = ChoiceField(
+            choices=self.get_author_choices(),
+            widget=Select(attrs={"class": "form-select"})
+        )
+
+    def get_author_choices(self):
+        authors = Author.objects.all().order_by('fullname')
+        choices = [(author.id, author.fullname) for author in authors]
+        return choices
+
+    class Meta:
+        model = Quote
+        fields = ['quote', 'author']
+    

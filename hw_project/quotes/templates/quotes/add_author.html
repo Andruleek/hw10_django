@@ -41,29 +41,3 @@
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 {% endblock %}
-
-{% extends "quotes/base.html" %}
-
-{% block content %}
-    {% if messages %}
-        <div>
-            {% for message in messages %}
-                <div {% if message.tags %} class="alert- {{ message.tags }}" {% endif %}>{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <form action="{% url 'quotes:Login' %}" method="post">
-        {% csrf_token %}
-        <div>
-            <label>Ім'я користувача: {{ form.username }}</label>
-        </div>
-        <div>
-            <label>Пароль: {{ form.password }}</label>
-        </div>
-        <div class="grid">
-            <button type="submit">Надіслати</button>
-            <button type="reset" class="secondary">Скинути</button>
-        </div>
-    </form>
-{% endblock %}

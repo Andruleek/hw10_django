@@ -3,23 +3,34 @@ from .utils import get_mongodb
 from django.core.paginator import Paginator
 from bson.objectid import ObjectId
 from .models import Quote, Tag, Author
+from .forms import QuoteForm, AuthorForm, TagForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-from .forms import AuthorForm, QuoteForm, TagForm
 
-# Create your views here.
 
 def main(request, page=1):
     db = get_mongodb()
-    quotes = list(db.quotes.find())
+    quotes = db.quotes.find()
     per_page = 10
-    paginator = Paginator(quotes, per_page)
+    paginator = Paginator(list(quotes), per_page)
     quotes_on_page = paginator.page(page)
-    return render(request, 'quotes/index.html', context={'quotes': quotes_on_page})
+    print(list(quotes))
+    latest_quote = Quote.objects.latest('created_at')
+    tags_for_latest_quote = latest_quote.tags.all()
+    author_for_latest_quote = Author.objects.get(id=latest_quote.author_id)
+    top_tags = Tag.objects.annotate(num_quotes=Count('quote')).order_by('-num_quotes')[:10]
+    for i, tag in enumerate(top_tags, start=1):
+        tag.css_class = f'tag-{i}'  # Создаем классы вида tag-1, tag-2 и т.д.
+    return render(request, 'quotes/index.html', context={'quotes':quotes_on_page, 
+                                                         'latest_quote': latest_quote,
+                                                          'author_for_latest_quote': author_for_latest_quote, 
+                                                          'tags_for_latest_quote': tags_for_latest_quote,
+                                                          'top_tags': top_tags,
+                                                          })
 
 def author_about(request, author_id):
     db = get_mongodb()
-    author = db.authors.find_one({'_id': ObjectId(author_id)})
+    author = db.authors.find_one({'_id': ObjectId(author_id)})  # Використання ObjectId(author_id)
     return render(request, 'quotes/author.html', context={'author': author})
 
 def tag_page(request, tag_name):
@@ -27,22 +38,25 @@ def tag_page(request, tag_name):
     quotes_with_tag = Quote.objects.filter(tags=tag)
     return render(request, 'quotes/tag.html', {'quotes_with_tag': quotes_with_tag, 'tag': tag})
 
+
 def author_for_tag(request, author_id):
     author = Author.objects.get(id=author_id)
     return render(request, 'quotes/author_for_tag.html', context={'author': author})
 
-@login_required
-def add_author(request):
-    if request.method == 'POST':
-        form = AuthorForm(request.POST)
-        if form.is_valid():
-            new_author = form.save(commit=False)
-            new_author.user = request.user
-            new_author.save()
-            return redirect(to='quotes:root')
+
+@login_required  # Проверяет, что пользователь авторизован, прежде чем позволить доступ к представлению.
+def add_author(request):  # Обработчик запроса для добавления нового автора.
+    if request.method == 'POST':  # Проверка метода запроса (POST или GET).
+        form = AuthorForm(request.POST)  # Создание формы на основе POST данных.
+        if form.is_valid():  # Проверка валидности данных из формы.
+            new_author = form.save(commit=False)  # Создание нового автора без сохранения в БД.
+            new_author.user = request.user  # Установка пользователя как создателя автора.
+            new_author.save()  # Сохранение автора в БД.
+            return redirect(to='quotes:root')  # Перенаправление на главную страницу.
         else:
-            return render(request, 'quotes/add_author.html', context={'form': form})
-    return render(request, 'quotes/add_author.html', context={'form': AuthorForm()})
+            return render(request, 'quotes/add_author.html', context={'form': form})  # Отображение формы с ошибками валидации.
+    return render(request, 'quotes/add_author.html', context={'form': AuthorForm()})  # Отображение пустой формы для ввода.
+
 
 @login_required
 def add_quote(request):
@@ -61,6 +75,7 @@ def add_quote(request):
             return render(request, 'quotes/add_quote.html', context={'form': form})
     return render(request, 'quotes/add_quote.html', context={'form': QuoteForm()})
 
+
 @login_required
 def add_tag(request):
     if request.method == 'POST':
@@ -74,97 +89,10 @@ def add_tag(request):
             return render(request, 'quotes/add_tag.html', context={'form': form})
     return render(request, 'quotes/add_tag.html', context={'form': TagForm()})
 
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import PasswordResetView
-from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-
-class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
-    template_name = 'users/password_reset.html'
-    email_template_name = 'users/password_reset_email.html'
-    html_email_template_name = 'users/password_reset_email.html'
-    success_url = reverse_lazy('users:password_reset_done')
-    success_message = "An email with instructions to reset your password has been sent to %(email)s."
-    subject_template_name = 'users/password_reset_subject.txt'
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-from django.urls import reverse_lazy
-from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.views import PasswordResetConfirmView
-
-class Login(LoginView):
-    template_name = 'quotes/login.html'
-    authentication_form = AuthenticationForm
-
-def custom_password_reset_view(request):
-    if request.method == 'POST':
-        form = PasswordResetForm(request.POST)
-        if form.is_valid():
-            form.save(request)
-            messages.success(request, 'Password reset email sent successfully.')
-            return redirect('users:login')
-    else:
-        form = PasswordResetForm()
-    return render(request, 'quotes/password_reset.html', {'form': form})
-
-class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'quotes/password_reset_confirm.html'
-    success_url = reverse_lazy('users:login')
-
-def custom_password_reset_done_view(request):
-    messages.success(request, 'Password reset successful. Please log in.')
-    return redirect('users:login')
-
-custom_login = Login.as_view()
-custom_password_reset = custom_password_reset_view
-custom_password_reset_confirm = CustomPasswordResetConfirmView.as_view()
-custom_password_reset_done = custom_password_reset_done_view
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
-
-class SignUp(CreateView):
-    form_class = UserCreationForm
-    template_name = 'quotes/signup.html'
-    success_url = reverse_lazy('quotes:login')
-
-    def form_valid(self, form):
-        form.save()
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password1')
-        user = authenticate(username=username, password=password)
-        login(self.request, user)
-        return redirect(self.success_url)
-    
-from django.shortcuts import render, redirect
-from .models import Author
-from .forms import AuthorForm
-
-def add_author(request):
-    if request.method == 'POST':
-        form = AuthorForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('quotes:add_author')
-    else:
-        form = AuthorForm()
-    return render(request, 'quotes/add_author.html', {'form': form})
 
 
-from django.db import models
 
-class Author(models.Model):
-    name = models.CharField(max_length=255)
 
-    def __str__(self):
-        return self.name
+
+
+
