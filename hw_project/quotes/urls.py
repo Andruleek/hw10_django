@@ -14,12 +14,8 @@ urlpatterns = [
     path('add_author/', views.add_author, name='add_author'),
     path('add_quote/', views.add_quote, name='add_quote'),
     path('add_tag/', views.add_tag, name='add_tag'),
-   ]
-
-
-urlpatterns = [
-    path('signup/', views.SignUp, name='signup'),
-    path('login/', views.Login, name='Login'),
+    path('signup/', views.SignUp.as_view(), name='signup'),
+    path('login/', views.Login.as_view(), name='Login'),
     path('logout/', views.logout, name='Logout'),
     path('reset-password/', views.ResetPasswordView.as_view(), name='password_reset'),
     path('reset-password/done/', PasswordResetDoneView.as_view(template_name='users/password_reset_done.html'),
@@ -31,4 +27,5 @@ urlpatterns = [
     path('reset-password/complete/',
          PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
-]
+   ]
+

@@ -58,14 +58,14 @@ from .models import Author, Quote, Tag
 class AuthorForm(forms.ModelForm):
     class Meta:
         model = Author
-        fields = ('name', 'bio')
+        fields = ('name', )
 
 class QuoteForm(forms.ModelForm):
     class Meta:
         model = Quote
-        fields = ('text', 'author', 'tags')
+        fields = ('quote', 'author', 'tags')
 
 class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
-        fields = ('name', 'description')
+        fields = ('name', )
