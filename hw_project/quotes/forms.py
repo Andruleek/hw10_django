@@ -53,12 +53,16 @@ class Login(AuthenticationForm):
 
 
 from django import forms
-from .models import Author, Quote, Tag
+from .models import Quote, Tag
+
+from django import forms
+from .models import Author
 
 class AuthorForm(forms.ModelForm):
     class Meta:
         model = Author
-        fields = ('name', )
+        fields = ('name',)
+
 
 class QuoteForm(forms.ModelForm):
     class Meta:

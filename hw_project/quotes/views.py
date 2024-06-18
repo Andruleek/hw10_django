@@ -145,3 +145,26 @@ class SignUp(CreateView):
         user = authenticate(username=username, password=password)
         login(self.request, user)
         return redirect(self.success_url)
+    
+from django.shortcuts import render, redirect
+from .models import Author
+from .forms import AuthorForm
+
+def add_author(request):
+    if request.method == 'POST':
+        form = AuthorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('quotes:add_author')
+    else:
+        form = AuthorForm()
+    return render(request, 'quotes/add_author.html', {'form': form})
+
+
+from django.db import models
+
+class Author(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
